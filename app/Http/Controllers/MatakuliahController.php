@@ -9,40 +9,70 @@ class MatakuliahController extends Controller
 {
     public function index()
     {
-        $matakuliah = Matakuliah::all();
-        return view('matakuliah.index', compact('matakuliah'));
+        $dataMatakuliah = Matakuliah::orderBy('kode_matakuliah', 'asc')->get();
+        return view('matakuliah.index', compact('dataMatakuliah'));
     }
- 
+
     public function create()
     {
         return view('matakuliah.create');
     }
- 
+
     public function store(Request $request)
     {
-        $request->validate([
-            'kode_matakuliah' => 'required|max:8|unique:matakuliah,kode_matakuliah',
-            'nama_matakuliah' => 'required|max:50',
-            'sks'             => 'required|integer|min:1|max:6',
-        ]);
- 
-        Matakuliah::create($request->all());
- 
-        return redirect()->route('matakuliah.index')->with('success', 'Data matakuliah berhasil ditambahkan!');
+        $validated = $request->validate(
+            [
+                'kode_matakuliah' => 'required|max:8|unique:matakuliah,kode_matakuliah',
+                'nama_matakuliah' => 'required|min:3|max:50',
+                'sks'             => 'required|numeric|min:1|max:6',
+            ],
+            [
+                'kode_matakuliah.required' => 'Kode matakuliah tidak boleh dikosongkan',
+                'kode_matakuliah.unique'   => 'Kode matakuliah sudah terdaftar',
+                'nama_matakuliah.required' => 'Nama matakuliah tidak boleh dikosongkan',
+                'nama_matakuliah.min'      => 'Nama matakuliah terlalu pendek, minimal 3 karakter',
+                'sks.required'             => 'SKS tidak boleh dikosongkan',
+                'sks.numeric'              => 'SKS harus berupa angka',
+            ]
+        );
+
+        Matakuliah::create($validated);
+        return redirect()->route('matakuliah')->with('success', 'Data matakuliah berhasil ditambahkan');
     }
- 
-    public function edit($kode)
+
+    public function show(string $kode)
     {
-        // Belum berfungsi
+        $detailMatakuliah = Matakuliah::findOrFail($kode);
+        return view('matakuliah.detail', compact('detailMatakuliah'));
     }
- 
-    public function update(Request $request, $kode)
+
+    public function edit(string $kode)
     {
-        // Belum berfungsi
+        $detailMatakuliah = Matakuliah::findOrFail($kode);
+        return view('matakuliah.create', compact('detailMatakuliah'));
     }
- 
-    public function destroy($kode)
+
+    public function update(Request $request, string $kode)
     {
-        // Belum berfungsi
+        $validated = $request->validate(
+            [
+                'nama_matakuliah' => 'required|min:3|max:50',
+                'sks'             => 'required|numeric|min:1|max:6',
+            ],
+            [
+                'nama_matakuliah.required' => 'Nama matakuliah tidak boleh dikosongkan',
+                'nama_matakuliah.min'      => 'Nama matakuliah terlalu pendek, minimal 3 karakter',
+                'sks.required'             => 'SKS tidak boleh dikosongkan',
+                'sks.numeric'              => 'SKS harus berupa angka',
+            ]
+        );
+
+        Matakuliah::where('kode_matakuliah', $kode)->update($validated);
+        return redirect()->route('matakuliah.index')->with('success', 'Data matakuliah berhasil diubah');
+    }
+
+    public function destroy(string $kode)
+    {
+        //
     }
 }
